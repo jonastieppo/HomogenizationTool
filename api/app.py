@@ -38,6 +38,16 @@ def setmaterial():
     print(request.get_json())
     return "set material route"
 
+@app.route('/api/selectcmeshfolder', methods=['GET'])
+def selectmeshfolder():
+    return "set material route"
+
+@app.route('/api/forms/teste', methods=['POST'])
+def forms():
+    print(request.get_data())
+    return "set material route"
+
+
 if __name__=="__main__":
     app.run(port=4996, debug=True)
 # app.run(port=4996)
