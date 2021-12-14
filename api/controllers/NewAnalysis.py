@@ -38,7 +38,6 @@ The process will be simple. The first step will be:
   3.a) In order to organize the results, just save the macro name and job name with different names. Also, save the results in different folder. 
 
 '''
-
 Model = TexGen_Mesh_to_cdb() #Creating the model
 
 #Assign Properties

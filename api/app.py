@@ -25,8 +25,6 @@ app = Flask(__name__)
 def getallmaterials():
     return json.loads(json.dumps(ExperimentalResults()))
 
-# app.run(port=4996)
-
 @app.route('/api/getallfibers')
 def getallfibers():
     return "all fibers"
@@ -40,7 +38,8 @@ def setmaterial():
     print(request.get_json())
     return "set material route"
 
-app.run(port=4996, debug=True)
+if __name__=="__main__":
+    app.run(port=4996, debug=True)
 # app.run(port=4996)
 
 # %%
