@@ -9,12 +9,12 @@ import json
 # sys.path.insert(0,controllersPath)
 
 # THESIS MODULUS
-from controllers.Model_creation import TexGen_Mesh_to_cdb #Model Creation
-from controllers.PBC_on_CDB import PeriodicCommandSetup # Periodic Boundary Conditions
-from controllers.Uniform_Strain_Field_in_CDB import Non_Periodic_BC #UDBC 
-from controllers.Solve import AnsysBath #Solution with ansys
-from controllers.PostProcessing import PostProcessing #Post Processing: Engineering Constants, etc. 
-from controllers.CLT import*
+from thesisModules.Model_creation import TexGen_Mesh_to_cdb #Model Creation
+from thesisModules.PBC_on_CDB import PeriodicCommandSetup # Periodic Boundary Conditions
+from thesisModules.Uniform_Strain_Field_in_CDB import Non_Periodic_BC #UDBC 
+from thesisModules.Solve import AnsysBath #Solution with ansys
+from thesisModules.PostProcessing import PostProcessing #Post Processing: Engineering Constants, etc. 
+from thesisModules.CLT import*
 
 # ROUTES
 
