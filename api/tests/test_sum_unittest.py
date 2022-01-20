@@ -1,26 +1,43 @@
 # %%
-# import unittest
+'''
+To run the tests, execute the following line:
+in root directory directory
 
+ptw -c --config .\api\tests\pytest.ini
 
-# class TestSum(unittest.TestCase):
+And, in other terminal:
 
-#     def test_sum(self):
-#         self.assertEqual(sum([1, 2, 3]), 6, "Should be 6")
-
-#     def test_sum_tuple(self):
-#         self.assertEqual(sum((1, 2, 2)), 6, "Should be 6")
-
-# if __name__ == '__main__':
+flask run
+'''
 #     unittest.main()
 # %%
 # content of test_class.py
 
-class TestClass:
-    def test_one(self):
-        x = "this"
-        assert "h" in x
+import requests
+from controllers import *
 
-    def test_two(self):
-        x = {"Teste":"check"}
-        assert hasattr(x, "check")
+
+# print(database)
+class TestClass:
+        
+    def routes(self):
+        self.port = r'http://127.0.0.1:5000/'
+        self.getmaterials_route = self.port+r"/api/getallmaterials"
+
+
+    def test_api_get_route(self):
+        self.routes()
+        r = requests.get(url=self.getmaterials_route)
+        print(r)
+        assert r"2/2 twill E-glass woven fabric/epoxy" in r.json()
+
 # %%
+import pytest
+
+
+def func(x):
+    return x + 1
+
+
+# def test_answer():
+#     assert func(3) == 5
