@@ -1,0 +1,30 @@
+[1mdiff --git a/api/tests/__init__.py b/api/tests/__init__.py[m
+[1mindex e92425c..90e417f 100644[m
+[1m--- a/api/tests/__init__.py[m
+[1m+++ b/api/tests/__init__.py[m
+[36m@@ -1,17 +1,3 @@[m
+[31m-# %%[m
+[31m-import unittest[m
+[31m-[m
+[31m-[m
+[31m-class TestAPI(unittest.TestCase):[m
+[31m-[m
+[31m-    def test_Upper(self):[m
+[31m-        self.assertEqual('foo'.upper(),'FOO')[m
+[31m-    [m
+[31m-[m
+[31m-[m
+[31m-if __name__ == "__main__":[m
+[31m-    unittest.main()[m
+[31m-# %%[m
+ import unittest[m
+ [m
+ class TestStringMethods(unittest.TestCase):[m
+[36m@@ -31,4 +17,5 @@[m [mclass TestStringMethods(unittest.TestCase):[m
+             s.split(2)[m
+ [m
+ if __name__ == '__main__':[m
+[31m-    unittest.main()[m
+\ No newline at end of file[m
+[32m+[m[32m    unittest.main()[m
+[32m+[m[32m# %%[m
