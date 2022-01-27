@@ -1,0 +1,79 @@
+  <mat-stepper [linear]="true" #stepper>
+    <mat-step>
+      <ng-template matStepLabel>Select TexGen File</ng-template>
+      <div style="padding-top: 200px;">
+      <mat-card>
+        <mat-card-actions>
+          <input type="file" class="file-input" (change)="onFileSelected($event)" #fileUpload>
+          
+          <button id="basic" type="button" mat-button (click)="fileUpload.click()" class="button-text-size" inputmode="file">
+            <mat-card-title>Choose file
+              
+            </mat-card-title>
+            <mat-card-subtitle>Select the TexGen file *.inp</mat-card-subtitle>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+      <!-- <button mat-button matStepperNext class="button-text-size" style="padding: 30mm;">
+        <mat-card  style=" width: 600px">
+            <mat-card-title>Next</mat-card-title>
+        </mat-card>
+      </button> -->
+    </mat-step>
+    <mat-step>
+        <ng-template matStepLabel>Select Material</ng-template>
+        <mat-card style="padding: 50px;">
+            <!-- fibers -->
+            <div>
+            <mat-form-field appearance="fill">
+                <mat-label>Select the fiber</mat-label>
+                <mat-select [(ngModel)]="selected_fiber">
+                  <mat-option *ngFor="let fiber of fibers" [value]="fiber">{{fiber}}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <!-- <p>Select option: {{selected}}</p> -->
+            <!-- Matrix -->
+            <mat-form-field appearance="fill" style="padding: 20px;">
+                <mat-label>Select the matrix</mat-label>
+                <mat-select [(ngModel)]="selected_matrix">
+                  <mat-option *ngFor="let resin of matrix" [value]="resin">{{resin}}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+        <app-materialdata></app-materialdata>
+        </mat-card>
+        <!--  -->
+        <!-- <div class="mat-card-button-left">
+        <button mat-button matStepperNext>
+          <mat-card  style=" width: 200px">
+              <mat-card-title style="font-size: 20px;">Next</mat-card-title>
+          </mat-card>
+        </button>
+      </div>  -->
+      </mat-step>
+    <mat-step>
+      <ng-template matStepLabel>Check the selected data</ng-template>
+        <!--  -->
+        <div style="padding-top:10px">
+        <button mat-button style="width: 100%;" (click)="showSelectedTexgen()">
+        <mat-toolbar>
+          <span>TexGen file: PUT AFTER</span>
+        </mat-toolbar>
+        </button>
+        </div>
+        <!--  -->
+        <div *ngIf="showTexGen">Show TexGen texfile</div>
+        <!--  -->
+        <div style="padding-top:10px">
+        <button mat-button style="width: 100%;" (click)="showSelectedFibers()">
+          <mat-toolbar>
+            <span>Fiber selected: {{selected_fiber}} | Matrix Selected: {{selected_matrix}}</span>
+          </mat-toolbar>
+          </button>
+          </div>
+          <!--  -->
+          <div *ngIf="showFibersTable"><app-materialdata></app-materialdata></div>
+
+    </mat-step>
+  </mat-stepper>

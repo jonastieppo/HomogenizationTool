@@ -1,0 +1,21 @@
+.mat-stepper-horizontal {
+    margin-top: 8px;
+  }
+  
+  .mat-form-field {
+    margin-top: 16px;
+  }
+
+.button-text-size{
+    font-size: 20px
+}
+
+.mat-card-button-left{
+    position: relative;
+    top: 30px;
+    left: 350px;
+}
+
+/* .file-input{
+    display: none;
+} */

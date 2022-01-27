@@ -1,0 +1,90 @@
+<table mat-table [dataSource]="dataSourceMatrix" class="mat-elevation-z8">
+
+    <!--- Note that these columns can be defined in any order.
+          The actual rendered columns are set as a property on the row definition" -->
+  
+    <!-- Position Column -->
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef> Name </th>
+      <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+    </ng-container>
+
+    <!-- Position Column -->
+    <ng-container matColumnDef="E1">
+        <th mat-header-cell *matHeaderCellDef> E1 </th>
+        <td mat-cell *matCellDef="let element"> {{element.E1}} </td>
+      </ng-container>
+
+    <!-- Position Column -->
+    <ng-container matColumnDef="v12">
+        <th mat-header-cell *matHeaderCellDef> v12 </th>
+        <td mat-cell *matCellDef="let element"> {{element.v12}} </td>
+        </ng-container>
+
+  
+    <tr mat-header-row *matHeaderRowDef="displayedColumnsMatrix"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumnsMatrix;"></tr>
+  </table>
+
+  <div style="padding-top: 20px;">
+  <table mat-table [dataSource]="dataSourceFiber" class="mat-elevation-z8">
+
+    <!--- Note that these columns can be defined in any order.
+          The actual rendered columns are set as a property on the row definition" -->
+  
+    <!-- Position Column -->
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef> Name </th>
+      <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+    </ng-container>
+
+    <!-- Position Column -->
+    <ng-container matColumnDef="E1">
+        <th mat-header-cell *matHeaderCellDef> E1 </th>
+        <td mat-cell *matCellDef="let element"> {{element.E1}} </td>
+      </ng-container>
+
+    <!-- Position Column -->
+    <ng-container matColumnDef="E2">
+        <th mat-header-cell *matHeaderCellDef> E2 </th>
+        <td mat-cell *matCellDef="let element"> {{element.E2}} </td>
+      </ng-container>
+
+    <!-- Position Column -->
+    <ng-container matColumnDef="G12">
+        <th mat-header-cell *matHeaderCellDef> G12 </th>
+        <td mat-cell *matCellDef="let element"> {{element.G12}} </td>
+    </ng-container>
+
+    <!-- Position Column -->
+    <ng-container matColumnDef="G23">
+        <th mat-header-cell *matHeaderCellDef> G23 </th>
+        <td mat-cell *matCellDef="let element"> {{element.G12}} </td>
+    </ng-container>
+
+    <!-- Position Column -->
+    <ng-container matColumnDef="v12">
+        <th mat-header-cell *matHeaderCellDef> v12 </th>
+        <td mat-cell *matCellDef="let element"> {{element.v12}} </td>
+    </ng-container>
+
+    <!-- Position Column -->
+    <ng-container matColumnDef="v23">
+        <th mat-header-cell *matHeaderCellDef> v23 </th>
+        <td mat-cell *matCellDef="let element"> {{element.v23}} </td>
+    </ng-container>
+
+
+
+    <!-- Position Column -->
+    <ng-container matColumnDef="vf">
+        <th mat-header-cell *matHeaderCellDef> vf </th>
+        <td mat-cell *matCellDef="let element"> {{element.vf}} </td>
+        </ng-container>
+
+  
+    <tr mat-header-row *matHeaderRowDef="displayedColumnsFiber"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumnsFiber;"></tr>
+  </table>
+</div>
+  
