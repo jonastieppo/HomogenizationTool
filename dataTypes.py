@@ -17,3 +17,11 @@ class Node(TypedDict):
     u1 : float | None # Applied displacamente on node for D.O.F 1
     u2 : float | None # Applied displacamente on node for D.O.F 2
     u3 : float | None # Applied displacamente on node for D.O.F 3
+
+class BoundaryConditions(TypedDict):
+    Exx: NodeList
+    Eyy: NodeList
+    Ezz: NodeList
+    Exy: NodeList
+    Exz: NodeList
+    Eyz: NodeList

@@ -1,5 +1,5 @@
 # %%
-from dataTypes import NodeList, Node
+from dataTypes import NodeList, Node, BoundaryConditions
 import pandas as pd
 import numpy as np
 class  UDBC_general():
@@ -9,7 +9,7 @@ class  UDBC_general():
     def __init__(self, nodes : NodeList) -> None:        
         self.nodeDataFrame = pd.DataFrame(data = nodes)
         self.nodeDataFrame['n'].astype(int)
-        self.bcDataFrame : list[pd.DataFrame] = []
+        self.bcDataFrame : BoundaryConditions = {}
         self.__applyBoundaryConditions()
         pass
 
@@ -61,9 +61,11 @@ class  UDBC_general():
         boundaryNodes = self.__findBoundaryNodes()
         self.__findCentroid()
 
-        for each_strain_case in self.__defineStrainTensors():
+        strain_cases,strain_names = self.__defineStrainTensors()
+
+        for each_strain_case, strain_case_name in zip(strain_cases,strain_names):
             self.strainTensor = each_strain_case
-            self.bcDataFrame.append(boundaryNodes.apply(self.__defineNodeDisplacements, axis=1))
+            self.bcDataFrame[strain_case_name]=(boundaryNodes.apply(self.__defineNodeDisplacements, axis=1))
 
     def __defineStrainTensors(self)->list[np.array]:
         '''
@@ -73,7 +75,7 @@ class  UDBC_general():
                         [0,0,0],
                         [0,0,0],
                         ]) 
-        return [Exx]
+        return [Exx],['Exx']
 
 def createNewMesh(nodesInAdirection = 10):
     data : NodeList = {} 
