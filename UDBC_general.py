@@ -84,7 +84,27 @@ class  UDBC_general():
                         [0,0,0],
                         [0,0,0],
                         ]) 
-        return [Exx],['Exx']
+        Eyy = np.array([[0,0,0],
+                        [0,1,0],
+                        [0,0,0],
+                        ]) 
+        Ezz = np.array([[0,0,0],
+                        [0,0,0],
+                        [0,0,1],
+                        ]) 
+        Exy = np.array([[0,1,0],
+                        [1,0,0],
+                        [0,0,0],
+                        ]) 
+        Exz = np.array([[0,0,1],
+                        [0,0,0],
+                        [1,0,0],
+                        ]) 
+        Eyz = np.array([[0,0,0],
+                        [0,0,1],
+                        [0,1,0],
+                        ]) 
+        return [Exx,Eyy,Ezz,Exy,Exz,Eyz],['Exx','Eyy','Ezz','Exy','Exz','Eyz']
 
 def createNewMesh(nodesInAdirection = 10):
     data : NodeList = {} 
