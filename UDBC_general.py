@@ -13,6 +13,14 @@ class  UDBC_general():
         self.__applyBoundaryConditions()
         pass
 
+    def __findBodyDimensions(self):
+        '''
+        Method to find body lenght
+        '''
+        self.x_l = abs(self.nodeDataFrame['x'].max()-self.nodeDataFrame['x'].min())
+        self.y_l = abs(self.nodeDataFrame['x'].max()-self.nodeDataFrame['x'].min())
+        self.z_l = abs(self.nodeDataFrame['x'].max()-self.nodeDataFrame['x'].min())
+
     def __findCentroid(self):
         '''
         Finds the body centroids
@@ -30,9 +38,9 @@ class  UDBC_general():
     def __defineNodeDisplacements(self, nodeInfo : Node):
         node_coordinates = self.__nodeCoordinatesByCentroid(nodeInfo)
         disp = np.matmul(self.strainTensor,node_coordinates)
-        nodeInfo['u1'] = disp[0]
-        nodeInfo['u2'] = disp[1]
-        nodeInfo['u3'] = disp[2]
+        nodeInfo['u1'] = disp[0]/self.x_l
+        nodeInfo['u2'] = disp[1]/self.y_l
+        nodeInfo['u3'] = disp[2]//self.z_l
         return nodeInfo
     
     def __findBoundaryNodes(self)->pd.DataFrame:
@@ -60,6 +68,7 @@ class  UDBC_general():
         '''
         boundaryNodes = self.__findBoundaryNodes()
         self.__findCentroid()
+        self.__findBodyDimensions()
 
         strain_cases,strain_names = self.__defineStrainTensors()
 
