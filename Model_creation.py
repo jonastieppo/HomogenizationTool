@@ -5,15 +5,15 @@ from tqdm import tqdm
 def Open_TexGen_inp(FileFolder,File):
     '''
     Method that will open an File.inp arquive,
-    located in FileFolder. As usual, FileFolder and File are 
+    located in FileFolder. As usual, FileFolder and File are
     strings.
-    
+
     Returns an array, where each position is a arquive line.
     '''
     with open(r'{}\{}.inp'.format(FileFolder,File), 'r') as myfile:
         data = myfile.readlines()
         DataArray=np.array(data)
-    
+
     return DataArray
 
 
@@ -21,12 +21,12 @@ def Tell_Element_Type_Name_Abaqus(Type):
     '''
     Will returnts the Element type name used by Abaqus
     '''
-    
+
     if Type == 'Quadratic':
         return 'C3D10'
     if Type == 'Linear':
         return 'C3D4'
-    
+
     return 'Error: Use "Quadratic" or "Linar"'
 
 
@@ -34,20 +34,20 @@ def Tell_Element_Type_Name_Ansys(Type):
     '''
     Will returnts the Element type name used by Abaqus
     '''
-    
+
     if Type == 'Quadratic':
         return 'SOLID187'
     if Type == 'Linear':
         return 'SOLID185'
-    
+
     return 'Error: Use "Quadratic" or "Linar"'
 
 
 def Get_Node_Element_Data_position(DataArray,ElementType):
     '''
-    This method identifies where the node data and element data are located in 
+    This method identifies where the node data and element data are located in
     .inp file from TexGen.
-    
+
     It returns a Dictionary
     '''
     ElementName = Tell_Element_Type_Name_Abaqus(ElementType)
@@ -58,10 +58,10 @@ def Get_Node_Element_Data_position(DataArray,ElementType):
             flag=1
         if DataArray[row] == '*Element, Type={}\n'.format(ElementName):
             NodeLineEnd=row
-        if (DataArray[row] == '********************\n' and 
+        if (DataArray[row] == '********************\n' and
             DataArray[row+1] == '*** ORIENTATIONS ***\n'):
             ElementLineEnd=row
-            
+
     NodeElementDataLoc = {'NodeLineBegin':NodeLineBegin,
                           'NodeLineEnd':NodeLineEnd,
                           'ElementLineEnd':ElementLineEnd,
@@ -73,12 +73,12 @@ def Get_Node_Element_Data_position(DataArray,ElementType):
 def Macro_Setup(ElementType):
     '''
     This method creates the first lines by Ansys, in the step where the geometry
-    is begin generated. 
+    is begin generated.
     '''
     from datetime import date
     today = date.today()
     AnsysElementName = Tell_Element_Type_Name_Ansys(ElementType)
-    
+
     f = open("macrosetup.temp","w")
     f.write("\n!MACRO TRANSLATED FROM TEXGEN BY JONAS ({})".format(today.strftime("%d/%m/%Y")))
     f.write("\n!Preprocessing apdl commands")
@@ -88,47 +88,47 @@ def Macro_Setup(ElementType):
     f.write("\n/NOPR")
     f.write("\nSAVE")
     f.close()
-    
+
     return None
 
 
 def Node_Temp_File(DataArray,NodeElementDataLoc):
     '''
     Method that receives an array with all Element and Node Data,
-    and creates a temporary node file to 
+    and creates a temporary node file to
     be read as dataframe
     '''
     NodeLineBegin = NodeElementDataLoc['NodeLineBegin']
     NodeLineEnd = NodeElementDataLoc['NodeLineEnd']
     array=DataArray[NodeLineBegin:NodeLineEnd]
-    
+
     print("Creating nodecood.temp temporary file:")
     f = open("nodecood.temp", "w")
     for row in tqdm(range(0,array.shape[0])):
         f.write("{}".format(array[row]))
     f.close()
-    
+
     return None
 
 
 def Element_Temp_File(DataArray,NodeElementDataLoc):
     '''
     Method that receives an array with all Element and Node Data,
-    and creates a temporary element file 
+    and creates a temporary element file
     be read as dataframe
     '''
     NodeLineEnd = NodeElementDataLoc['NodeLineEnd']
     ElementLineEnd = NodeElementDataLoc['ElementLineEnd']
     array=DataArray[NodeLineEnd:ElementLineEnd]
-    
+
     print("Creating elementconnect.temp temporary file:")
     f = open("elementconnect.temp", "w")
     for row in tqdm(range(0,array.shape[0])):
         f.write("{}".format(array[row]))
     f.close()
-    
-    return None   
-    
+
+    return None
+
 
 def Create_Node_DataFrame():
     '''
@@ -138,7 +138,7 @@ def Create_Node_DataFrame():
     df = pd.read_csv('nodecood.temp', sep = ',',skiprows=1, header=None)
     df.insert(0, "!Node Command", "N")
     df.to_csv('nodecood.temp', sep=',', index=False)#Saving a external file
-    
+
     return None
 
 
@@ -149,7 +149,7 @@ def Create_Element_DataFrame(ElementType):
     df = pd.read_csv('elementconnect.temp', sep = ',',skiprows=1, header=None)
 
     if ElementType=='Quadratic':
-        
+
         df_Emore = pd.DataFrame(data = df.drop(columns=[0,1,2,3,4,5,6,7,8])) #Creating a second dataframe with the extra nodes
 
         df=df.drop(columns=[0,9,10]) #Dropping of the element numeration (because it is not used in ANSYS) and the last two columns that will be declared in EMORE command
@@ -172,30 +172,30 @@ def Create_Element_DataFrame(ElementType):
             f.write(r"{}".format(dataE[i]))
             f.write(r"{}".format(dataEmore[i]))
         f.close()
-        
-        import os 
+
+        import os
         os.remove('Ecommands.temp')
         os.remove('Emorecommands.temp')
-        
+
     if ElementType=='Linear':
 
         df=df.drop(columns=0) #Dropping of the element numeration (because it is not used in ANSYS)
         df.insert(0, "!Element Command", "E")
         #print("This is the the new element connectivity dataframe: \n{}".format(df))
         df.to_csv('elementconnect.temp', sep=',', index=False)#Saving a external file
-    
+
     return None
 
 
 def Open_TexGen_ori(FileFolder,File):
     '''
-    Method to read an TexGen .ori file. 
-    
+    Method to read an TexGen .ori file.
+
     Returns a dataframe
     '''
     print("Reading {}.ori...".format(File))
     df = pd.read_csv('{}\{}.ori'.format(FileFolder,File),skiprows=7,header=None)
-    
+
     return df
 
 
@@ -210,7 +210,7 @@ def Write_Local_Cood_APDL_temp_file(df):
 
     x_rot = np.zeros((df.shape[0],1))
     z_rot = np.zeros((df.shape[0],1))
-    
+
     print("Calculating rotatation angles")
     for row in tqdm(range(0,df.shape[0])):
         x_rot[row] = arr(np.rad2deg(np.arccos(df.iloc[row,1])))
@@ -219,18 +219,18 @@ def Write_Local_Cood_APDL_temp_file(df):
         e2 = arr([df.iloc[row,4],np.absolute(df.iloc[row,5]),df.iloc[row,6]])
         z_rot[row] = arr(np.rad2deg(np.arccos((np.cross(e1,e2)[2]))))
     # #The last line is a bit tricky. It takes the cross-product between the
-    # # vector e1 and e2(forced to respect the right hand rule), and pull off 
+    # # vector e1 and e2(forced to respect the right hand rule), and pull off
     # #from it the arccos of the dot product between the 3rd vector and z-axys,
     # # which would result in just the k component (see anton pg.806).
-    
+
     print("Creating data for dataframe:")
     df.loc[:,0]=df.loc[:,0]+10
     ang3 = np.zeros((df.shape[0],1))
     data = {'CS':df[0],'xgr':x_rot[:,0],'zlr':z_rot[:,0],'ang3':ang3[:,0]}
-    
+
     print("Assigning rotation angles to a dataframe:")
     df_localcood = pd.DataFrame(data=data)
-    
+
     print("Creating localcood.temp temporary arquive..")
     f = open("localcood.temp", "w")
     f.write("\n!Creating Local Cood Sys")
@@ -241,12 +241,12 @@ def Write_Local_Cood_APDL_temp_file(df):
         f.write("\nlocal_cood({},2)={}".format(row+1,df_localcood.iloc[row,1])) #Ang1
         f.write("\nlocal_cood({},3)={}".format(row+1,df_localcood.iloc[row,2])) #Ang2
         f.write("\nlocal_cood({},4)={}".format(row+1,df_localcood.iloc[row,3])) #Ang3
-        
+
     # #Aqui, apesar do elemento fazer apenas uma rotação, eu tenho que criar um sistema de coordenadas intermediário. Esse sistema
-    # # intermediário consiste numa rotação em torno do Z global, de (0-90) graus ou qualquer ângulo de fabricação do compósito. 
-    # # Então, alinha-se o sistema de coordenadas com este último local criado, e se faz uma rotação em torno do x local, indicando 
+    # # intermediário consiste numa rotação em torno do Z global, de (0-90) graus ou qualquer ângulo de fabricação do compósito.
+    # # Então, alinha-se o sistema de coordenadas com este último local criado, e se faz uma rotação em torno do x local, indicando
     # # a curvatura da fibra.
-    
+
     f.write("\n!Assigning Local Coordinate System")
     f.write("\n\n*DO,i,1,{},1".format(df_localcood.shape[0]))
     f.write("\nCSYS,0") #Colocando com referencial o sistema global
@@ -255,35 +255,35 @@ def Write_Local_Cood_APDL_temp_file(df):
     f.write("\nCLOCAL, local_cood(i,1), 0, 0, 0, 0, 0, 0,local_cood(i,3)") #Segunda rotação, em torno do sistema local
     f.write("\nEMODIF, i, ESYS, local_cood(i,1)") #Colocando o sistema criado como referencial
     f.write("\n*ENDDO")
-    f.write("\nSAVE")  
+    f.write("\nSAVE")
     f.close()
 
     f.close()
-    
+
     return None
-    
+
 
 def Open_TexGen_eld(FileFolder,File):
     '''
-    Opens the .eld file from texgen. 
-    
+    Opens the .eld file from texgen.
+
     Returns a dataframe
     '''
-    
+
     print("Reading {}.eld ".format(File))
     df = pd.read_csv('{}\{}.eld'.format(FileFolder,File),skiprows=8,header=None)
-    
+
     return df
 
 
 def Identify_Matrix_and_Fiber(df):
     '''
     Identifies matrix and fibers elements. It will creates a temporary file
-    with element information: whether it its matrix or fiber. Further, once they are 
+    with element information: whether it its matrix or fiber. Further, once they are
     identified, node componenents are generated.
     '''
     df = df.sort_values(by=1)
-    
+
     row=0
     while(df.iloc[row,1]==-1):
         last_matrix_element = df.iloc[row,0]
@@ -306,7 +306,7 @@ def Identify_Matrix_and_Fiber(df):
     df2 = pd.DataFrame(data={'Element Number':fiber_elements[:,0]})
     df2.insert(1, "Material", 2)
 
-    df=df.append(df2)
+    df = pd.concat([df,df2])
 
     #writing a file for apdl commands
 
@@ -322,12 +322,12 @@ def Identify_Matrix_and_Fiber(df):
         f.write("\nmat_info({},1)={}".format(row+1,df.iloc[row,0]))
         f.write("\nmat_info({},2)={}".format(row+1,df.iloc[row,1]))
 
-    f.write("\n!Assigin Properties")    
+    f.write("\n!Assigin Properties")
     f.write("\n*DO,i,1,{},1".format(df.shape[0]))
     f.write("\nEMODIF, mat_info(i,1), MAT, mat_info(i,2)")
     f.write("\n*ENDDO")
 
-    f.write("\n!Creating Elements Components")    
+    f.write("\n!Creating Elements Components")
     f.write("\nESEL,S, , ,{}".format(matrix_elements[0,0])) #selecionando o primeiro elemento na lista
     print("Writing APDL commands for select Matrix Elements")
     for row in tqdm(range(1,matrix_elements.shape[0])):
@@ -348,8 +348,8 @@ def Identify_Matrix_and_Fiber(df):
     f.write("\nCM,fibers,ELEM")
 
     f.close()
-    
-    return None   
+
+    return None
 
 
 def Tow_Properties(Property,Value):
@@ -367,7 +367,7 @@ def Tow_Properties(Property,Value):
                        'G12':None,
                        'vf':None
                       }
-    
+
     return FiberProperties
 
 
@@ -381,13 +381,13 @@ def Matrix_Properties(Property,Value):
                        'E1':None,
                        'v12':None,
                       }
-    
+
     return Matrix_Properties
 
 
 def Write_APDL_mat_commands(Tow_Properties,Matrix_Properties):
     '''
-    This method writes APDL commands to assign material data. 
+    This method writes APDL commands to assign material data.
     It receives as input two dictionaries: Tow_Properties and Matrix_Properties.
     '''
     print("Writing APDL Commands for Material Assignment:")
@@ -420,10 +420,10 @@ def Write_APDL_mat_commands(Tow_Properties,Matrix_Properties):
     GXZ = GYZ
     vf = Tow_Properties['vf']
     fiber_name =  Tow_Properties['Name']
-    
+
     #If vf<1, apply micromechanics
     if vf<1:
-        EX = vf*EX+(1-vf)*EX_m 
+        EX = vf*EX+(1-vf)*EX_m
         alpha=np.sqrt(vf)/(1-np.sqrt(vf)*(1-EX_m/EX))
         EY = EX_m*((1-np.sqrt(vf))+alpha)
         EZ = EY
@@ -441,7 +441,7 @@ def Write_APDL_mat_commands(Tow_Properties,Matrix_Properties):
 
         GYZ = G_m*(1+psi*eta_yz*vf)/(1-eta_yz*vf)
         GXZ = GYZ
-        
+
     f.write('\n!Fiber {} Mat Properties'.format(fiber_name))
     f.write('\nMPTEMP,,,,,,,,  ')
     f.write('\nMPTEMP,1,0  ')
@@ -456,7 +456,7 @@ def Write_APDL_mat_commands(Tow_Properties,Matrix_Properties):
     f.write('\nMPDATA,GXZ,2,,{}'.format(GXZ))
 
     f.close()
-    
+
 
 def TellsCurrentDirectory():
     '''
@@ -531,9 +531,9 @@ class TexGen_Mesh_to_cdb():
     '''
     This will translate an TexGen mesh to an ansys cdb.
     '''
-    
+
     def __init__(self):
-        
+
         print("Starting the Texgen Mesh Translator:")
         #print an explanation of possible functios
         return None
@@ -557,7 +557,7 @@ class TexGen_Mesh_to_cdb():
         '''
         if FileFolder=='Default':
             FileFolder = TellsCurrentDirectory()
-        
+
         if File == 'Default':
             File = 'mesh'
 
@@ -589,16 +589,16 @@ class TexGen_Mesh_to_cdb():
 
     def MountCdb(self,name='Default',folder='Default',ansys_exe_path='Default',ansysProd='Default'):
         '''
-        Run Ansys in Bath, and save the cdb file. By default, it 
+        Run Ansys in Bath, and save the cdb file. By default, it
         save a cdb with a default name and in the Cdb's Directory (..\CDB Files). If the
-        the directory doesn't exists, it is created. 
+        the directory doesn't exists, it is created.
         '''
         from datetime import datetime
         from Solve import AnsysBath
         Solution = AnsysBath()
 
         if name =='Default':
-            name = r"geo_macro_created" 
+            name = r"geo_macro_created"
         if folder == 'Default':
             folder = r"{}\CDB Files".format(TellsCurrentDirectory())
             CheckIfFolderExists(folder)
@@ -613,7 +613,7 @@ class TexGen_Mesh_to_cdb():
                 print("Please, the path must be a string")
 
             Solution.ChangeAnsysSolverParameters(['product'],[ansysProd])
-    
+
 
         fi = open("macrosetup.temp","r")
         f_setput = fi.read()
@@ -628,19 +628,19 @@ class TexGen_Mesh_to_cdb():
         fi.close()
 
         fi = open("elementconnect.temp", "r")
-        f_ele = fi.read() #savinf the element_to_apdl data to a var 
+        f_ele = fi.read() #savinf the element_to_apdl data to a var
         fi.close()
 
         fi = open("localcood.temp", "r")
-        f_localcood = fi.read() 
+        f_localcood = fi.read()
         fi.close()
 
         fi = open("matinfo.temp", "r")
-        f_mat = fi.read() 
-        fi.close()    
-        
+        f_mat = fi.read()
+        fi.close()
+
         save_cdb_string = SaveCDB(name,folder)
-        
+
         self.macro_directory = r"{}\Macros".format(TellsCurrentDirectory())
 
         f = open(r"{}\macro_inp_to_cdb.temp".format(self.macro_directory),"w")
@@ -689,7 +689,7 @@ class TexGen_Mesh_to_cdb():
     def DeleteTempFiles(self,DeleteMacTemp='YES'):
         '''
         Method to delete temporary files. If the user wants, the macro used to generate
-        the CDB is not deleted. 
+        the CDB is not deleted.
         '''
         if DeleteMacTemp == 'YES':
             import os
@@ -699,5 +699,3 @@ class TexGen_Mesh_to_cdb():
         DeleteTempFile()
 
         return None
-         
-
