@@ -3,7 +3,7 @@
 
 '''
 In this version, the will be to define method to all operations, mainly the first geometrical entities. After this, integrate with
-the rest of the code. Further, I will store the paired entities and request when needed to write the APDL Commands. 
+the rest of the code. Further, I will store the paired entities and request when needed to write the APDL Commands.
 As a sequence, this code can be described as three steps:
 
 1) Identify All geometric boundaries and Entities (Faces, Edges and Nodes)
@@ -21,7 +21,7 @@ from tqdm import tqdm
 def GetGeometryMacro(macro_name,macro_folder):
     '''
     Method to store the macroname and the folder where it is in two strings. Of course,
-    it will returns two strings. 
+    it will returns two strings.
     '''
     return macro_name,macro_folder
 
@@ -47,11 +47,11 @@ def GetNodeDataFromCDB(macro_folder,cdbname):
     for row in range(0, data.shape[0]):
         if data[row] == '(3i9,6e21.13e3)\n':
             nodebegin = row
-        if data[row] == '(19i9)\n':
+        if data[row] == '(19i10)\n':
             elementbegin = row
 
     nodedata = data[nodebegin+1:elementbegin-2]
-    
+
     return nodedata
 
 
@@ -59,7 +59,7 @@ def CreatDataframeFromNodeData(nodedata):
     '''
     A method to creat a dataframe from a nodedata originated in ansys APDL
     '''
-    
+
     f= open("nodecood.tmp","w")
 
     for i in range(0,nodedata.shape[0]):
@@ -88,8 +88,8 @@ def CreatDataframeFromNodeData(nodedata):
 
 def IdentiFyBoundaries():
     '''
-    Here the keys is to identify the boundaries in the RVE. It will extracts the maximum and the minimum 
-    in each coordinate. So, as a consequente, the domain must be a brick.     
+    Here the keys is to identify the boundaries in the RVE. It will extracts the maximum and the minimum
+    in each coordinate. So, as a consequente, the domain must be a brick.
     '''
 
     boundaryEast = max(nodedataframe['X'])
@@ -115,7 +115,7 @@ There will be 3 groups of nodes:
 1)Faces
 2)Edges
 3)Vertices
-Of course, some nodes can be part of the three simultanaly. Therefore, for faces, we have to 
+Of course, some nodes can be part of the three simultanaly. Therefore, for faces, we have to
 exclude all nodes commom to edges, and for the edges, all nodes commom to vertices. But,
 first, we have to select all nodes on boundaries.
 '''
@@ -124,23 +124,23 @@ def SelecByCood(dataframe,Cood,Value):
     Function that wil return a sorted dataframe with all rows
     have a commom Cood. 'Cood' is a string ('X','Y'or 'Z') and value
     is a flot
-    
+
     '''
     dataframe_sorted = dataframe.sort_values(by=[Cood]) #Sorting values by the Cood
     dataframe_sorted_boolean_boundary = dataframe_sorted.isin([Value])
-    
+
     indexrows = np.array([])
-    
+
     for i in list(dataframe_sorted_boolean_boundary.index):
         if dataframe_sorted_boolean_boundary.loc[i,Cood]:
             indexrows=np.append(indexrows,int(i)) #obs.: I'vr tried to use list.append, but it didn't work
-    
+
     return dataframe.loc[indexrows]
 
 
 def FindBoundaryNodes():
     '''
-    Given the RVE limits, this method will return all nodes that rely in boundaries. 
+    Given the RVE limits, this method will return all nodes that rely in boundaries.
     '''
     boundaryWest = RVE_limits['boundaryWest']
     boundaryEast = RVE_limits['boundaryEast']
@@ -148,14 +148,14 @@ def FindBoundaryNodes():
     boundarySouth = RVE_limits['boundarySouth']
     boundaryUpper = RVE_limits['boundaryUpper']
     boundaryLower = RVE_limits['boundaryLower']
-    
+
     west_boundary_nodes = SelecByCood(nodedataframe,'X',boundaryWest)
     east_boundary_nodes = SelecByCood(nodedataframe,'X',boundaryEast)
     north_boundary_nodes = SelecByCood(nodedataframe,'Y',boundaryNorth)
     south_boundary_nodes = SelecByCood(nodedataframe,'Y',boundarySouth)
     upper_boundary_nodes = SelecByCood(nodedataframe,'Z',boundaryUpper)
     lower_boundary_nodes =  SelecByCood(nodedataframe,'Z',boundaryLower)
-    
+
     global nodes_on_boundaries
 
     nodes_on_boundaries = {'west_boundary_nodes':west_boundary_nodes,
@@ -182,15 +182,15 @@ def TellRVESize():
     L = abs(east_boundary_nodes-west_boundary_nodes)
     W = abs(north_boundary_nodes-south_boundary_nodes)
     D = abs(upper_boundary_nodes-lower_boundary_nodes)
-    
+
     GeometricalSizes = {'X':L,'Y':W,'Z':D}
-    
+
     return GeometricalSizes
 
 
 def FindGeometricalCenter():
     '''
-    Just a method to calculate the geometrical center. This is necessary because the position vector 
+    Just a method to calculate the geometrical center. This is necessary because the position vector
     must be taken repectively to body geometrical center
     '''
     boundaryWest = RVE_limits['boundaryWest']
@@ -203,14 +203,14 @@ def FindGeometricalCenter():
     x_c = (boundaryEast+boundaryWest)/2
     y_c = (boundaryNorth+boundarySouth)/2
     z_c = (boundaryUpper+boundaryLower)/2
-    
+
     return x_c,y_c,z_c
 
 
 def FindGeometricalCenter_dataframe_format():
     '''
     Just a method to return a formatted dataframe with the Geometrical Center of the body. It will be used in the method
-    below. 
+    below.
     '''
     boundaryWest = RVE_limits['boundaryWest']
     boundaryEast = RVE_limits['boundaryEast']
@@ -222,43 +222,43 @@ def FindGeometricalCenter_dataframe_format():
     x_c = (boundaryEast+boundaryWest)/2
     y_c = (boundaryNorth+boundarySouth)/2
     z_c = (boundaryUpper+boundaryLower)/2
-    
+
     GeoCenter = {'X':x_c,'Y':y_c,'Z':z_c}
-    
+
     return GeoCenter
 
 
 def GlobalLocalCoodConversion(Cood_input,Arg='To Local'):
     '''
-    Makes the conversion between local and global coordinates:    
+    Makes the conversion between local and global coordinates:
     here, Cood_input is a line of node datraframe or a dictionary with the following format:
-    
+
     Cood = {'X':X_value,'Y':Y_value,'Z':Z_value}
-    
-    It is necessary when the RVE is not centered in origin. 
+
+    It is necessary when the RVE is not centered in origin.
     '''
-    
+
     #Finding Geometrical Center
     GeoCenter = FindGeometricalCenter_dataframe_format()
-    
+
     if Arg == 'To Local':
-        
+
         Cood_local= {'X':None,'Y':None,'Z':None} #Setting up the Cood_local formart
-        
+
         Cood_local['X'] = Cood_input['X']-GeoCenter['X']
         Cood_local['Y'] = Cood_input['Y']-GeoCenter['Y']
         Cood_local['Z'] = Cood_input['Z']-GeoCenter['Z']
-        
+
         return Cood_local
-    
+
     if Arg == 'To Global':
-        
+
         Cood_global= {'X':None,'Y':None,'Z':None} #Setting up the Cood_global formart
-        
+
         Cood_global['X'] = Cood_input['X']+GeoCenter['X']
         Cood_global['Y'] = Cood_input['Y']+GeoCenter['Y']
         Cood_global['Z'] = Cood_input['Z']+GeoCenter['Z']
-        
+
         return Cood_global
 
 
@@ -272,40 +272,40 @@ def FindGeometricalCenterDataframe(dataframe):
         '''
         max_value = max(dataframeCood)
         min_value = min(dataframeCood)
-        
+
         return min_value,max_value
-    
+
     x_min,x_max = set_max_min(dataframe['X'])
     y_min,y_max = set_max_min(dataframe['Y'])
     z_min,z_max = set_max_min(dataframe['Z'])
-       
+
     x_c = (x_max+x_min)/2
     y_c = (y_max+y_min)/2
     z_c = (z_max+z_min)/2
-    
+
     return x_c,y_c,z_c
 
 '''
 The process will be simple. With boundary group nodes selected, just reselect all nodes on boundary with commom edges,
-and create new groups. Further, unselect the nodes of edges that are on boundarys, because they will be the vertices. 
+and create new groups. Further, unselect the nodes of edges that are on boundarys, because they will be the vertices.
 
 To deal with that role, it will be presented UnselecByCood and SelectInsideSquare
 '''
 def UnselecByCood(dataframe,Cood,Value):
     '''
     Function that will return a dataframe with all rows that don't have
-    a certain cood value. It is, as expected, the opposed of SelecByCood. 
-    Here, again Cood is a string and Value is a float. 
+    a certain cood value. It is, as expected, the opposed of SelecByCood.
+    Here, again Cood is a string and Value is a float.
     '''
     dataframe_sorted = dataframe.sort_values(by=[Cood]) #Sorting values by the Cood
     dataframe_sorted_boolean_boundary = dataframe_sorted.isin([Value])
-    
+
     indexrows = np.array([])
-    
+
     for i in list(dataframe_sorted_boolean_boundary.index):
         if dataframe_sorted_boolean_boundary.loc[i,Cood]==False:
             indexrows=np.append(indexrows,i) #obs.: I'vr tried to use list.append, but it didn't work
-    
+
     return dataframe.loc[indexrows]
 
 
@@ -314,7 +314,7 @@ def SelectInsideSquare(center,DataFrame,square_size):
     Method that will receive a center, which is a dataframe line (important), OR a struct with the follwing keywords:
     center = {'X':Value1,'Y':Value2,'Z':Value3}
     and will return all node index in 'DataFrame'
-    that rely inside a square with square_size lenght. In order to do that, this method will calculate 
+    that rely inside a square with square_size lenght. In order to do that, this method will calculate
     an absolute distance abs(a-b) dataframe, and create
     a new dataframe with only nodes with desired coordinates - whith a while loop, which is faster.
     '''
@@ -323,50 +323,50 @@ def SelectInsideSquare(center,DataFrame,square_size):
     DataFrameDesiredValues.insert(1,'X',center['X'])
     DataFrameDesiredValues.insert(2,'Y',center['Y'])
     DataFrameDesiredValues.insert(3,'Z',center['Z'])
-    
+
     index_for_dataframe = pd.Series(list(DataFrame.index))
     DataFrameDesiredValues = DataFrameDesiredValues.set_index(index_for_dataframe)
-    
+
     subtraction_operation_dataframe = abs(DataFrameDesiredValues.subtract(DataFrame))
-    
+
     comparing_dataframe = pd.DataFrame(data={'NodeNumber':DataFrame['NodeNumber']})
     comparing_dataframe = comparing_dataframe.set_index(index_for_dataframe) #setting index
-    
+
     comparing_dataframe.insert(1,'X',None)
     comparing_dataframe.insert(2,'Y',None)
     comparing_dataframe.insert(3,'Z',None)
     comparing_dataframe.insert(4,'comparing values',None)
-    
+
     comparing_dataframe['X'] = np.where(subtraction_operation_dataframe['X']<square_size/2,True,False)
     comparing_dataframe['Y'] = np.where(subtraction_operation_dataframe['Y']<square_size/2,True,False)
     comparing_dataframe['Z'] = np.where(subtraction_operation_dataframe['Z']<square_size/2,True,False)
-    
+
     comparing_dataframe['comparing values'] = comparing_dataframe.X & comparing_dataframe.Y & comparing_dataframe.Z
-    
+
     comparing_dataframe=comparing_dataframe.sort_values(by='comparing values',ascending=False)
-    
+
     selected_index = np.array([])
-        
+
     index_list = list(comparing_dataframe.index)
     index_i = index_list[0]
     counting_only_trues = 0
-    
+
     while(comparing_dataframe.loc[index_i,'comparing values']):
         selected_index = np.append(selected_index,index_i)
         index_i = index_list[counting_only_trues]
         counting_only_trues=counting_only_trues+1
-    
+
     return selected_index,comparing_dataframe
 
 
 def FindFaceNodes():
     '''
     Face names follow the same rule as the boundaries names.
-    
+
     The method will identify the nodes that rely on faces exclusively. In order to accomplish the task,
-    the methods IdentiFyBoundaries, IdentiFyBoundaries, and UnselecByCood will be used. 
+    the methods IdentiFyBoundaries, IdentiFyBoundaries, and UnselecByCood will be used.
     '''
-    
+
     boundaryWest = RVE_limits['boundaryWest']
     boundaryEast = RVE_limits['boundaryEast']
     boundaryNorth = RVE_limits['boundaryNorth']
@@ -427,7 +427,7 @@ def FindEdgesNodes():
     '''
     Method to selected the Nodes in the Edges.
 
-    Obs: The edges names follow the right hand rule, beggining in x positive or x-y positive. 
+    Obs: The edges names follow the right hand rule, beggining in x positive or x-y positive.
     '''
 
     boundaryWest = RVE_limits['boundaryWest']
@@ -489,11 +489,11 @@ def FindEdgesNodes():
     E_l = SelecByCood(south_boundary_nodes,'Z',boundaryUpper)
     E_l = UnselecByCood(E_l,'X',boundaryWest)
     E_l = UnselecByCood(E_l,'X',boundaryEast)
-    
+
     global only_edge_nodes
 
     only_edge_nodes = {
-        
+
         'E_a':E_a,
         'E_b':E_b,
         'E_c':E_c,
@@ -507,15 +507,15 @@ def FindEdgesNodes():
         'E_k':E_k,
         'E_l':E_l
     }
-    
+
 
 def FindVerticesNodes():
     '''
     A method to define edges nodes.
-    
+
     The vertices names follow the right-hand rule, begging at x-y positive quadrant.
     '''
-    
+
     west_boundary_nodes = nodes_on_boundaries['west_boundary_nodes']
     east_boundary_nodes = nodes_on_boundaries['east_boundary_nodes']
 
@@ -548,7 +548,7 @@ def FindVerticesNodes():
 
     v_g = SelecByCood(west_boundary_nodes,'Z',boundaryUpper)
     v_g = SelecByCood(v_g,'Y',boundarySouth)
-    
+
     global only_vertices_nodes
 
     only_vertices_nodes = {
@@ -563,10 +563,10 @@ def FindVerticesNodes():
                           }
 
 '''
-The stragy here is to find, in the opposite face, the node pair, and save the node pairs in a dataframe, 
-by the notation (-x,y,z), for example. The best practice is to define a method for it. 
+The stragy here is to find, in the opposite face, the node pair, and save the node pairs in a dataframe,
+by the notation (-x,y,z), for example. The best practice is to define a method for it.
 The search will be done opposite dataframe. That is, the node pairs of Face_east will be search in the Face_west,
-which assures less work and better results. 
+which assures less work and better results.
 '''
 def ReturnKeyWordsAslist(dictionary):
     '''
@@ -583,7 +583,7 @@ def DictEntities():
     '''
 
     DictEntities = {
-        
+
         'Face_east':only_face_nodes['Face_east'],
         'Face_north':only_face_nodes['Face_north'],
         'Face_upper':only_face_nodes['Face_upper'],
@@ -597,7 +597,7 @@ def DictEntities():
         'v_b':only_vertices_nodes['v_b'],
         'v_c':only_vertices_nodes['v_c'],
         'v_d':only_vertices_nodes['v_d']
-    } 
+    }
 
     return DictEntities,ReturnKeyWordsAslist(DictEntities)
 
@@ -606,7 +606,7 @@ def TellPairVar(EntityMasterName):
     '''
     Choosing the entities to be paried is very prone to error.  Therefore, this method will return a dictionary with
     a par entity.
-    
+
     '''
 
     # Dict_pairs_strings = {
@@ -641,18 +641,18 @@ def TellPairVar(EntityMasterName):
         'v_d':only_vertices_nodes['v_f']
     }
 
-    
+
     return Dict_pairs_strings[EntityMasterName]
-    
+
 
 def ChooseCoodToReflect(EntityMasterName):
     '''
     Method to choose the correct Coordinate to Reflect. Is basic a dictionary, where
     each keyword has and Cood do Reflect
     '''
-    
+
     DictionaryCood = {
-        
+
         'Face_east':['X'],
         'Face_north':['Y'],
         'Face_upper':['Z'],
@@ -661,13 +661,13 @@ def ChooseCoodToReflect(EntityMasterName):
         'E_c':['X','Z'],
         'E_d':['Y','Z'],
         'E_e':['X','Y'],
-        'E_f':['X','Y'],   
+        'E_f':['X','Y'],
         'v_a':None,
         'v_b':None,
         'v_c':None,
         'v_d':None
     }
-    
+
     return DictionaryCood[EntityMasterName]
 
 
@@ -676,7 +676,7 @@ def ChooseTypeEntity(EntityMasterName):
     Method that will return the entity type. Returns a string
     '''
     DictionaryCood = {
-        
+
         'Face_east':'Face',
         'Face_north':'Face',
         'Face_upper':'Face',
@@ -703,7 +703,7 @@ def ListRegionNumbers():
     for i in range(1,14):
         Regions_name = "Region{}".format(i)
         Regions.append(Regions_name)
- 
+
     return Regions
 
 
@@ -722,7 +722,7 @@ def ChooseEntityName(EntityType):
     ChooseTypeEntity()
     '''
     Dictionary_Entityname = {
-        
+
         'Region1':'Face_east',
         'Region2':'Face_north',
         'Region3':'Face_upper',
@@ -743,8 +743,8 @@ def ChooseEntityName(EntityType):
 
 def FindClosestNodeV2(i_node,dataframeOppositeCutted):
     '''
-    New method to find the closest node. Again, for each node, the task here is to calculate de least euclidean distance. 
-    The diference here, is that instead take all dataframeOpposite nodes, it will look the search in a square, and the proceeding 
+    New method to find the closest node. Again, for each node, the task here is to calculate de least euclidean distance.
+    The diference here, is that instead take all dataframeOpposite nodes, it will look the search in a square, and the proceeding
     will be based in 7 operations:
     a)Create a dataframe with identical to dataframeOppositeCutted, but with all 'X', 'Y' and 'Z' equals to i_node x,y, and z
     b)Element-wise subtraction between i_node dataframe and dataframeOppositeCutted
@@ -753,43 +753,43 @@ def FindClosestNodeV2(i_node,dataframeOppositeCutted):
     e)re-order the resulting dataframe in ascending order
     f)Takes the first position
     '''
-    
+
     #Create i_node dataframe
     i_node_x = i_node['X']
     i_node_y = i_node['Y']
     i_node_z = i_node['Z']
-    
+
     index_for_dataframe = pd.Series(list(dataframeOppositeCutted.index))
     i_node_df = pd.DataFrame(data={'NodeNumber':dataframeOppositeCutted['NodeNumber']})
     i_node_df = i_node_df.set_index(index_for_dataframe) #setting index
-    
+
     i_node_df.insert(1,'X',i_node_x)
     i_node_df.insert(2,'Y',i_node_y)
     i_node_df.insert(3,'Z',i_node_z)
-    
+
     #Element wise subtraction and take abs value
-    
+
     subtraction_operation_dataframe = abs(i_node_df.subtract(dataframeOppositeCutted))
-    
+
     #Sum in colum axis
     sum_over_subtraction_dataframe = subtraction_operation_dataframe.sum(axis=1)
-    
+
     #sort and Take the first least value
     least = sum_over_subtraction_dataframe.nsmallest(n=1)
-    
+
     return least.index
 
 
 def FindPairs(dataframe,dataframeOpposite,CoodToReflect):
     '''
-    Method that will receive a dataframe with coordinates, and a cood. to be reflected. 
-    Therefore, if it receives 'X', it will seeks for (-X,Y,Z) in the other dataframe. 
-    CoodToReflect is a string. 
-    It returns the index of the dataframe that contain the paired nodes. 
+    Method that will receive a dataframe with coordinates, and a cood. to be reflected.
+    Therefore, if it receives 'X', it will seeks for (-X,Y,Z) in the other dataframe.
+    CoodToReflect is a string.
+    It returns the index of the dataframe that contain the paired nodes.
     '''
     IndexOfOppositeDataframeList = np.array([])
     '''
-    In order to avoid bug, as the node index pair is found, the originary node index will be stored. 
+    In order to avoid bug, as the node index pair is found, the originary node index will be stored.
     This is just for security. This is will stored in 'Index_dataframe_master' variable
     '''
     Index_dataframe_master = np.array([])
@@ -802,7 +802,7 @@ def FindPairs(dataframe,dataframeOpposite,CoodToReflect):
             2.c)Get back to Global Coordinate System
         4) Get the node index by it Coordinate
     '''
-    
+
     for node_in_dataframe in dataframe.index:
         '''
         Here, I am invertig the requested coordinate
@@ -819,7 +819,7 @@ def FindPairs(dataframe,dataframeOpposite,CoodToReflect):
         IndexOfOppositeDataframe = GetIndexByCood(dataframeOpposite,CurrentNodeCoordinate_global_reflected)
         IndexOfOppositeDataframeList = np.append(IndexOfOppositeDataframeList,IndexOfOppositeDataframe)
         Index_dataframe_master = np.append(Index_dataframe_master,node_in_dataframe)
-    
+
 
     #
     return Index_dataframe_master,IndexOfOppositeDataframeList
@@ -827,11 +827,11 @@ def FindPairs(dataframe,dataframeOpposite,CoodToReflect):
 
 def FindEdgesPairs(dataframe,dataframeOpposite,CoodToReflect):
     '''
-    Method to find diagonally opposed pair of nodes in edges. 
+    Method to find diagonally opposed pair of nodes in edges.
     '''
     IndexOfOppositeDataframeList = np.array([])
     Index_dataframe_master = np.array([])
-    
+
     '''
     The process will be simple:
         1) Get the i-esim coordinate of the dataframe
@@ -843,7 +843,7 @@ def FindEdgesPairs(dataframe,dataframeOpposite,CoodToReflect):
     '''
     #print("Searching for paired nodes in Edges")
     for node_in_dataframe in dataframe.index:
-        
+
         #Getting the i-esim node coordinate
         CurrentNodeCoordinate = GetCoodByIndex(dataframe,node_in_dataframe)
         #Converting to local Coordinates
@@ -865,11 +865,11 @@ def FindVerticePairs(dataframe,dataframeOpposite):
     '''
     Method that will just return the opposite vertices dataframe index. As there is only one
     node on vertice, the dataframe and dataframeOpposite ALREADY ARE the pairs nodes.
-    So, the deal here is trivial, it is just return this dataframe index. 
+    So, the deal here is trivial, it is just return this dataframe index.
     '''
     IndexOfMasterDataframeList = list(dataframe.index)
     IndexOfOppositeDataframeList = list(dataframeOpposite.index)
-    
+
     return IndexOfMasterDataframeList,IndexOfOppositeDataframeList
 '''
 Now we need to find the node pairs to apply PBC. For that, it will defined a method that return the
@@ -881,14 +881,14 @@ def GetIndexByCood(dataframe,Cood):
     Method that receive a dataframe, and a Cood, and check if the exact Cood. exists in dataframe,
     returning it index.
     Cood actually is a dataframe where contains just the information of a specific node.
-    For opmization sakes, the nodes in dataframe will be reselected. 
+    For opmization sakes, the nodes in dataframe will be reselected.
     '''
     original_dataframe = dataframe
     index_nodes_selected,comparison_dataframe = SelectInsideSquare(Cood,dataframe,tol_global)
-    
+
     #reselecting dataframe
     dataframe = dataframe.loc[index_nodes_selected]
-    
+
     if dataframe.shape[0]<1:
         print("----------------------------------")
         print("Original Dataframe to Find node:")
@@ -899,11 +899,11 @@ def GetIndexByCood(dataframe,Cood):
         print("Check if the mesh is periodic, or set the tolerance by setTOL Command")
         print(dataframe)
         input("Press Enter to Continue")
-   
+
     if len(index_nodes_selected)==1:
          #If in index_nodes_selected list has only one node, this is the paired node
         return index_nodes_selected
-    
+
     else:
         #Calls FindClosestNodeV2
         return FindClosestNodeV2(i_node=Cood,dataframeOppositeCutted=dataframe)
@@ -917,7 +917,7 @@ def CreateDictWithCoodList(List):
     dictionary = {'X':List[0],
                   'Y':List[1],
                   'Z':List[2]}
-    return dictionary   
+    return dictionary
 
 
 def GetCoodByIndex(dataframe,Index):
@@ -926,9 +926,9 @@ def GetCoodByIndex(dataframe,Index):
     NodeNumber,X,Y,Z, and with them respective values
     '''
     if Index in list(dataframe.index):
-        
+
         dataframe_index_list = dataframe.loc[Index]
-        
+
         dictionary_cood = {'NodeNumber':dataframe_index_list['NodeNumber'],
                       'X':dataframe_index_list['X'],
                       'Y':dataframe_index_list['Y'],
@@ -944,7 +944,7 @@ def CreatePairedNodesDataframe(DataframeMaster,DataframeSlave,MasterList,SlaveLi
     the paired nodes, in order to apply PBC conditions.
     DataframeMaster: Dataframe of the master nodes information
     DataframeSlate: Dataframe of the slave nodes information
-    
+
     '''
     ColumnMaster = list(DataframeMaster.loc[MasterList,'NodeNumber'])
     ColumnSlave = list(DataframeSlave.loc[SlaveList,'NodeNumber'])
@@ -967,27 +967,27 @@ def StrainState(Strain,Const):
     Exx = np.array([[Const,0,0],
                    [0,0,0],
                    [0,0,0]])
-    
+
     Eyy = np.array([[0,0,0],
                    [0,Const,0],
                    [0,0,0]])
-    
+
     Ezz = np.array([[0,0,0],
                    [0,0,0],
                    [0,0,Const]])
-    
+
     Exy = np.array([[0,Const,0],
                    [Const,0,0],
                    [0,0,0]])
-    
+
     Eyz = np.array([[0,0,0],
                    [0,0,Const],
                    [0,Const,0]])
-    
+
     Exz = np.array([[0,0,Const],
                    [0,0,0],
                    [Const,0,0]])
-    
+
     DictionaryStrain = {'Exx':Exx,
                         'Eyy':Eyy,
                         'Ezz':Ezz,
@@ -995,7 +995,7 @@ def StrainState(Strain,Const):
                         'Eyz':Eyz,
                         'Exz':Exz
                        }
-    
+
     return DictionaryStrain[Strain]
 
 
@@ -1006,7 +1006,7 @@ def StrainCasesList():
     redundant here.
     '''
     DictionaryList = ['Exx','Eyy','Ezz','Exy','Eyz','Exz']
-    
+
     return DictionaryList
 
 
@@ -1016,29 +1016,29 @@ def PBC_apdl_commands(PairedNodes,StrainState,Normal,EntityMasterName,EntityType
     apply the constrained equatios. But on edges and vertices theres come a problem: that is a discontinous point. It would be
     like the same point would receive simultanely two constrained equations.  Further, to assure equilibruim in body
     it must be taken diagonnaly oppossed edges and vertices  - therefore, a center of equilibruim
-    occurs in the GC of the body(it is a way to see in understand it.). 
-    Following, a just explanation of the normals will be made. a1,a2, and a3 are coordinates; further, 
-    a1 is the boundaryEast, a2 is the boundaryNorth, and a3 is the boundaryUpper of this code. 
+    occurs in the GC of the body(it is a way to see in understand it.).
+    Following, a just explanation of the normals will be made. a1,a2, and a3 are coordinates; further,
+    a1 is the boundaryEast, a2 is the boundaryNorth, and a3 is the boundaryUpper of this code.
     -For faces, the position vector will be a vector centered in face (to justify it, see LUCIANO article), which, for example, becomes
     [a1,0,0].
     -For edges, the treatment will be a compound vector, v = ([a1,0,0]+[0,a2,0])=[a1,a2,0], depending of the case, of course. This assures the constraints
-    equations match with continuity displacement of the body. 
+    equations match with continuity displacement of the body.
     -For vertices, analogously, the normal will be a combination, becoming v = [a1,a2,a3]
-    
+
     Finally, a explantion of the input variabels:
     PariedNodes is a dataframe with node number of paired nodes (the return of 'CreatePairedNodesDataframe' Method.)
     StrainCase is a matrix with the desired StrainState (just the return of 'StrainState' method)
     Normal is the normal (or the equivalent, for edges and vertices) where you will apply the condition; on faces,
-    edges or vertices. 
+    edges or vertices.
     '''
     f = open('PBC_CE_Commands.tmp','w')
-    
+
     u = ['UX','UY','UZ']
-    
+
     '''
     Matrix multiplication
     '''
-    
+
     beta = 2*StrainState.dot(Normal)
 
     f.write('\n!------------------------------------------!\n')
@@ -1050,20 +1050,20 @@ def PBC_apdl_commands(PairedNodes,StrainState,Normal,EntityMasterName,EntityType
         Node_Master_colum = list(PairedNodes['Node Master'])
         Node_Slave_colum = list(PairedNodes['Node Slave'])
         paired_node_length = len(Node_Master_colum) #It could be len(Node_Slave_colum)
-        
+
         for i in range(0,paired_node_length):
             #Selecting Paired nodes
             Node_Master = Node_Master_colum[i]
             Node_Slave  = Node_Slave_colum[i]
             for j in range(StrainState.shape[0]):
-                                
+
                 command = "CE,NEXT,{},{},{},1,{},{},-1".format(float(beta[j]),
                                                             Node_Master,
                                                                 u[j],
                                                             Node_Slave,
                                                                 u[j])
                 f.write("\n{}".format(command))
-                
+
     if EntityType == 'vertice':
 
         Node_Master = PairedNodes['Node Master']
@@ -1077,18 +1077,18 @@ def PBC_apdl_commands(PairedNodes,StrainState,Normal,EntityMasterName,EntityType
             command_node_slave = "D,{},{},{}".format(Node_Slave,
                                                     u[j],
                                                     float(-beta[j]/2))
-            
+
             f.write("\n{}".format(command_node_master))
             f.write("\n{}".format(command_node_slave))
-    
+
     f.close()
 
 
 def PariedNodesOfEntities(Entity,Master,Slave,Cood,EntityName):
     '''
-    As the process is repetitive, this method aims to avoid operation error. Here, 
+    As the process is repetitive, this method aims to avoid operation error. Here,
     Master is the face/edge/vertice where the master nodes are located,
-    and Slave is the opposite face/edge/vertice where the slave node are located. 
+    and Slave is the opposite face/edge/vertice where the slave node are located.
     Cood is a list of strings with the Coordinate to reflect, ex: ['X','Y']
     It returns a dataframe
     '''
@@ -1100,13 +1100,13 @@ def PariedNodesOfEntities(Entity,Master,Slave,Cood,EntityName):
         MasterList,SlaveList = FindVerticePairs(Master,Slave)
 
     DataframePairedNodes = CreatePairedNodesDataframe(Master,Slave,MasterList,SlaveList,EntityName)
-    
+
     return DataframePairedNodes
 
 
 def ChoosePositionVector(EntityName):
     '''
-    Method that will return the position vector of each Face/Edge/Vertice 
+    Method that will return the position vector of each Face/Edge/Vertice
     '''
 
     boundaryWest = RVE_limits['boundaryWest']
@@ -1116,9 +1116,9 @@ def ChoosePositionVector(EntityName):
     boundaryUpper = RVE_limits['boundaryUpper']
     boundaryLower = RVE_limits['boundaryLower']
 
-    
+
     x_c,y_c,z_c = FindGeometricalCenter()
-    
+
     v1 = np.zeros((3,1)) #Position Vector for East face
     v1[0]=boundaryEast -x_c
     v1[1]=0
@@ -1148,11 +1148,11 @@ def ChoosePositionVector(EntityName):
     v7[0]=0
     v7[1]=boundarySouth -y_c
     v7[2]=boundaryLower -z_c
-    v8 = np.zeros((3,1)) #Equivalent position vector for E_e edge 
+    v8 = np.zeros((3,1)) #Equivalent position vector for E_e edge
     v8[0]=boundaryEast -x_c
     v8[1]=boundaryNorth -y_c
     v8[2]=0
-    v9 = np.zeros((3,1)) #Equivalent position vector for E_f edge 
+    v9 = np.zeros((3,1)) #Equivalent position vector for E_f edge
     v9[0]=boundaryWest -x_c
     v9[1]=boundaryNorth -y_c
     v9[2]=0
@@ -1172,9 +1172,9 @@ def ChoosePositionVector(EntityName):
     v13[0]=boundaryEast -x_c
     v13[1]=boundarySouth -y_c
     v13[2]=boundaryLower -z_c
-    
+
     PositionVectorDictionary = {
-        
+
         'Face_east':v1,
         'Face_north':v2,
         'Face_upper':v3,
@@ -1188,9 +1188,9 @@ def ChoosePositionVector(EntityName):
         'v_b':v11,
         'v_c':v12,
         'v_d':v13
-        
+
     }
-    
+
     return PositionVectorDictionary[EntityName]
 
 
@@ -1266,21 +1266,21 @@ def apdl_commands_extract_export_results(path,case):
     f.write('\n*CFCLOS')
     f.write('\n*END')
     f.write('\n/INPUT,macrotowrite ')
-    
+
     f.close()
-    
+
     return None
 
 
 def SaveAverageResults(StrainDictionary,StressDictionary,StressState,StrainAverage,StressAverage):
     '''
-    Method that will receive two dictionaries, being them the average streesses of each case. 
-    At each iteration, a keyword (namely, StressState) will be added, in order to save the results. 
+    Method that will receive two dictionaries, being them the average streesses of each case.
+    At each iteration, a keyword (namely, StressState) will be added, in order to save the results.
     '''
-    
+
     StrainDictionary[StressState]=StrainAverage
     StressDictionary[StressState]=StressAverage
-        
+
     return StrainDictionary,StressDictionary
 
 
@@ -1316,7 +1316,7 @@ def DefaultSeperatorTerminal():
 
 def DeleteTempFiles():
     '''
-    A macro to delete the tempory files generated during the execution. 
+    A macro to delete the tempory files generated during the execution.
     '''
     import os
     os.remove('PBC_CE_for_strain_case.tmp')
@@ -1354,7 +1354,7 @@ class PeriodicCommandSetup():
         DefaultSeperatorTerminal()
         print("         Starting the PBC Applying")
         DefaultSeperatorTerminal()
-        
+
         if geomacro_folder == 'Default':
             geomacro_folder = r"{}\CDB Files".format(TellsCurrentDirectory())
             CheckIfFolderExists(geomacro_folder)
@@ -1362,15 +1362,15 @@ class PeriodicCommandSetup():
                 print(r"Creating a ..\CDB Files Directory. Put all CDB's there, for best practices. But, the program still works otherway.")
                 geomacro_folder = r"{}".format(TellsCurrentDirectory())
             '''
-            The last lines are kind confusing. But here it goes some explanation: Fist, it checks if the Folder \CDB File exists. If not, the folder is created. 
+            The last lines are kind confusing. But here it goes some explanation: Fist, it checks if the Folder \CDB File exists. If not, the folder is created.
             Then, if the folder doens't exists, a warning message appears. But, even if the folder doesn't exists, the program will search for the file in the current folder.
             '''
-                
+
         if geomacroname == 'Default':
             geomacroname='geo_macro_created'
 
         #Getting the folder and file to be working in
-        self.macroname = geomacroname 
+        self.macroname = geomacroname
         self.geomacro_folder = geomacro_folder
         self.tol = SetTOL(tol)
 
@@ -1379,7 +1379,7 @@ class PeriodicCommandSetup():
         self.nodedataframe = CreatDataframeFromNodeData(self.nodedata)
         self.RVE_limits = IdentiFyBoundaries()
         # Set Some global vars
-        FindBoundaryNodes() 
+        FindBoundaryNodes()
         FindFaceNodes()
         FindEdgesNodes()
         FindVerticesNodes()
@@ -1435,12 +1435,12 @@ class PeriodicCommandSetup():
          d) Write Commands to save Results
 
          The user must indicates the path where strain and stress results will be saved. For default,
-         it will save in the directory where the files can be found. 
+         it will save in the directory where the files can be found.
         '''
         import os
 
         DefaultSeperatorTerminal()
-        
+
 
         def TellsDirectory():
             '''
@@ -1448,9 +1448,9 @@ class PeriodicCommandSetup():
             '''
             directory = os.getcwd()
             return directory
-       
+
         current_date = TellsDate()
-        
+
         if Solvemacrofolder=='Default':
             Solvemacrofolder=r"{}\Macros".format(TellsCurrentDirectory())
             CheckIfFolderExists(Solvemacrofolder)
@@ -1475,7 +1475,7 @@ class PeriodicCommandSetup():
 
         def AddExternalDataInFile(File_receptor,File_to_add):
             '''
-            Method to add external data from a file, in a 
+            Method to add external data from a file, in a
             '''
             with open (File_to_add,'r') as File_to_add_data:
                 data = File_to_add_data.read()
@@ -1494,14 +1494,14 @@ class PeriodicCommandSetup():
             3) For each Entity:
              a) Runs 'PBC_apdl_commands'
              b) Read the tmp file generated
-             c) Write the file in current Strain Case 
+             c) Write the file in current Strain Case
             4) Save the Giant file
             '''
             f_ce = open('PBC_CE_for_strain_case.tmp','w')
             PairedNodesDataFrame = self.DataframePairedNodes #can be put above
             StrainToapply = StrainState(StrainCase,StrainStateValue)
             f_ce.write("\n!Applying PBC for {} Strain State:".format(StrainCase))
-            
+
             region_counter = 0
             Regions_list = ListRegionNumbers()
             for EachEntity in self.EntMastersNames:
@@ -1518,7 +1518,7 @@ class PeriodicCommandSetup():
                 with open ('PBC_CE_Commands.tmp','r') as PBC_commands_file:
                     data = PBC_commands_file.read()
                 f_ce.write(data)
-                
+
             f_ce.close()
 
 
@@ -1574,8 +1574,8 @@ class PeriodicCommandSetup():
             # Write CE for the cases choosed by user:
             print("Creating Macro for {} Strain State(s):".format(StrainCase))
             for StrainChoose in tqdm(StrainCase):
-            # Write CE 
-                CommandsForGivenCase(MainFile=f,StrainCase=StrainChoose) 
+            # Write CE
+                CommandsForGivenCase(MainFile=f,StrainCase=StrainChoose)
 
 
     def ShowStrainCases(self):
@@ -1589,7 +1589,7 @@ class PeriodicCommandSetup():
         print(List)
         DefaultSeperatorTerminal()
         return None
-     
+
 
     def DeleteTempFiles(self):
         '''
@@ -1599,5 +1599,5 @@ class PeriodicCommandSetup():
         DefaultSeperatorTerminal()
         print("Temporary files removed!")
         DefaultSeperatorTerminal()
-        
+
         return None
