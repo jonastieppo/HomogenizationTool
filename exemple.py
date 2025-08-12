@@ -55,4 +55,11 @@ Solution = AnsysBath()
 Solution.ChangeAnsysSolverParameters(['ANSYSexe'],[ansys_exe])
 Solution.RunAnsys()
 
+
+# %%
+'''
+Post processing
+'''
+postProcess = PostProcessing()
+postProcess.EngineeringConstantsCorrected()
 # %%
